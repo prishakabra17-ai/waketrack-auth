@@ -1,0 +1,53 @@
+<!doctype html>
+<!--
+  WakeTrack Spotify login "bounce" page.
+
+  Why this exists: Spotify only accepts https:// (secure web) addresses as the
+  place to send you after login. Expo Go's address starts with exp:// instead,
+  so Spotify refuses it. This page lives at a free https:// address (GitHub
+  Pages). Spotify sends you here, and this page immediately forwards the login
+  result back into the app.
+
+  The app tells this page where to forward to by tucking its own address into
+  the "state" value, which Spotify hands back untouched. For safety we only
+  ever forward to exp:// (Expo Go) or waketrack:// (a future installed app).
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WakeTrack login</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+           background: #000; color: #fff; font: 17px -apple-system, system-ui, sans-serif; text-align: center; padding: 16px; }
+    a { display: inline-block; margin-top: 20px; padding: 14px 28px; border-radius: 999px;
+        background: #1DB954; color: #000; font-weight: 600; text-decoration: none; }
+    #msg { max-width: 320px; }
+  </style>
+</head>
+<body>
+  <div id="msg">Returning to WakeTrack…</div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var state = params.get('state') || '';
+      // state looks like "<random>.<url-encoded app address>"
+      var dot = state.indexOf('.');
+      var target = dot >= 0 ? decodeURIComponent(state.slice(dot + 1)) : '';
+      var allowed = target.indexOf('exp://') === 0 || target.indexOf('waketrack://') === 0;
+      var msg = document.getElementById('msg');
+      if (!allowed) {
+        msg.textContent = 'This page only works when opened from the WakeTrack app.';
+        return;
+      }
+      var back = target + (target.indexOf('?') >= 0 ? '&' : '?') + params.toString();
+      msg.innerHTML = 'Returning to WakeTrack…<br>';
+      var link = document.createElement('a');
+      link.href = back;
+      link.textContent = 'Back to WakeTrack';
+      msg.appendChild(link);
+      window.location.replace(back);
+    })();
+  </script>
+</body>
+</html>
